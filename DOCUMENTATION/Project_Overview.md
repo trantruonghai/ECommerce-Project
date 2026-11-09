@@ -43,3 +43,8 @@ Customers need a convenient and user-friendly platform to browse and purchase cl
 
 ## Team
 WEB_2627302_08
+01. Trần Trường Hải (Leader)
+02. Lăng Minh Đức
+03. Phạm Bá Minh Đức
+04. Võ Quang Nhân
+05. Nguyễn Nhật Huy
