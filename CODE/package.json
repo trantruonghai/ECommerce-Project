@@ -1,0 +1,19 @@
+{
+  "name": "stylishfashion-auth-module",
+  "version": "1.0.0",
+  "description": "Authentication, member discount and tests (Huy's part, Checkpoint 02)",
+  "main": "src/app.js",
+  "scripts": {
+    "test": "jest --runInBand"
+  },
+  "dependencies": {
+    "bcryptjs": "^2.4.3",
+    "express": "^4.19.2",
+    "jsonwebtoken": "^9.0.2",
+    "pg": "^8.11.5"
+  },
+  "devDependencies": {
+    "jest": "^29.7.0",
+    "supertest": "^7.0.0"
+  }
+}
