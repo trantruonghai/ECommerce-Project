@@ -7,4 +7,7 @@ const app = express();
 app.use(express.json());
 app.use('/api/auth', authRoutes);
 
+const adminRoutes = require('./routes/adminRoutes');
+app.use('/api/admin', adminRoutes);
+
 module.exports = app;
