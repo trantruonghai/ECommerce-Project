@@ -1,0 +1,347 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>StylishFashion</title>
+<style>
+:root{--bg:#f4f5f7;--card:#fff;--ink:#1b1f2a;--mute:#667085;--line:#dfe2e8;--acc:#2f3fd0;--acc2:#e8ebff;--ok:#16794c;--err:#b42318;--r:10px}
+*{box-sizing:border-box}
+body{margin:0;font:16px/1.5 "Segoe UI",Roboto,Helvetica,Arial,sans-serif;background:var(--bg);color:var(--ink)}
+a{color:inherit;text-decoration:none}
+button,input,select,textarea{font:inherit}
+:focus-visible{outline:3px solid var(--acc);outline-offset:2px}
+header{background:var(--card);border-bottom:1px solid var(--line);position:sticky;top:0;z-index:5}
+.bar{max-width:1100px;margin:auto;padding:12px 16px;display:flex;align-items:center;gap:16px;flex-wrap:wrap}
+.logo{font-weight:800;font-size:1.35rem;letter-spacing:-.5px;margin-right:auto}
+.logo span{color:var(--acc)}
+nav{display:flex;gap:6px;align-items:center;flex-wrap:wrap}
+nav a,nav button{padding:8px 12px;border-radius:8px;border:0;background:none;cursor:pointer;color:var(--ink)}
+nav a:hover,nav button:hover{background:var(--acc2)}
+.badge{background:var(--acc);color:#fff;border-radius:99px;font-size:.75rem;padding:1px 7px;margin-left:4px}
+main{max-width:1100px;margin:auto;padding:20px 16px 60px}
+h1{font-size:1.6rem;margin:0 0 16px;letter-spacing:-.4px}
+.tools{display:flex;gap:10px;flex-wrap:wrap;margin-bottom:18px}
+.tools input,.tools select,.f input,.f textarea{padding:10px 12px;border:1px solid var(--line);border-radius:8px;background:#fff;width:100%}
+.tools input{flex:2 1 220px;width:auto}.tools select{flex:1 1 160px;width:auto}
+.grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(210px,1fr));gap:16px}
+.card{background:var(--card);border:1px solid var(--line);border-radius:var(--r);overflow:hidden;display:flex;flex-direction:column}
+.thumb{aspect-ratio:4/5;display:grid;place-items:center;font-size:3rem;font-weight:800;color:#fff}
+.thumb img{width:100%;height:100%;object-fit:cover}
+.card .in{padding:12px 14px 14px}
+.card h3{margin:0 0 2px;font-size:1rem}
+.mute{color:var(--mute);font-size:.9rem}
+.price{font-weight:700}
+.btn{display:inline-block;background:var(--acc);color:#fff;border:0;border-radius:8px;padding:11px 18px;cursor:pointer;font-weight:600}
+.btn:disabled{opacity:.45;cursor:not-allowed}
+.btn.ghost{background:var(--acc2);color:var(--acc)}
+.btn.block{width:100%;text-align:center}
+.detail{display:grid;grid-template-columns:1fr 1fr;gap:28px}
+.detail .thumb{border-radius:var(--r)}
+.chips{display:flex;gap:8px;flex-wrap:wrap;margin:6px 0 14px}
+.chip{padding:8px 14px;border:1px solid var(--line);border-radius:8px;background:#fff;cursor:pointer}
+.chip[aria-pressed=true]{border-color:var(--acc);background:var(--acc2);color:var(--acc);font-weight:600}
+.chip:disabled{opacity:.4;text-decoration:line-through;cursor:not-allowed}
+.panel{background:var(--card);border:1px solid var(--line);border-radius:var(--r);padding:16px}
+.row{display:flex;gap:12px;align-items:center;padding:12px 0;border-bottom:1px solid var(--line)}
+.row:last-child{border:0}
+.row .thumb{width:64px;aspect-ratio:1;font-size:1.2rem;border-radius:8px;flex:none}
+.row .info{flex:1;min-width:0}
+.qty{display:flex;align-items:center;gap:6px}
+.qty button{width:30px;height:30px;border:1px solid var(--line);background:#fff;border-radius:6px;cursor:pointer}
+.sum{display:flex;justify-content:space-between;padding:4px 0}
+.sum.t{font-weight:800;font-size:1.15rem;border-top:1px solid var(--line);margin-top:8px;padding-top:10px}
+.disc{color:var(--ok)}
+.two{display:grid;grid-template-columns:1.4fr 1fr;gap:20px;align-items:start}
+.f label{display:block;font-weight:600;margin:12px 0 4px}
+.err{color:var(--err);font-size:.9rem;margin-top:6px}
+.msg{padding:12px 14px;border-radius:8px;background:var(--acc2);margin-bottom:14px}
+.msg.warn{background:#fff3d6}
+.msg.ok{background:#dcf5e7}
+.st{display:inline-block;padding:2px 10px;border-radius:99px;background:var(--acc2);color:var(--acc);font-size:.85rem}
+#toast{position:fixed;left:50%;bottom:24px;transform:translateX(-50%);background:var(--ink);color:#fff;padding:10px 18px;border-radius:8px;opacity:0;pointer-events:none;transition:opacity .2s;z-index:9}
+#toast.on{opacity:1}
+.skel{height:300px;border-radius:var(--r);background:#e7e9ee}
+@media(max-width:760px){.detail,.two{grid-template-columns:1fr}.grid{grid-template-columns:repeat(2,1fr);gap:10px}}
+@media(prefers-reduced-motion:reduce){*{transition:none!important}}
+</style>
+</head>
+<body>
+<header><div class="bar">
+  <a class="logo" href="#/">Stylish<span>Fashion</span></a>
+  <nav id="nav"></nav>
+</div></header>
+<main id="app"></main>
+<div id="toast" role="status" aria-live="polite"></div>
+
+<script>
+/* ===== Config ===== */
+const API = '/api';            // Base URL from the API convention
+const MEMBER_RATE = 0.05;      // 5% member discount
+const $ = s => document.querySelector(s);
+const app = $('#app');
+const money = n => Number(n).toLocaleString('en-US') + ' ₫';
+const esc = s => String(s ?? '').replace(/[&<>"']/g, c => ({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
+
+/* ===== State: cart + login (localStorage) ===== */
+const store = {
+  get(k, d){ try{ return JSON.parse(localStorage.getItem(k)) ?? d }catch{ return d } },
+  set(k, v){ try{ localStorage.setItem(k, JSON.stringify(v)) }catch{} },
+  del(k){ try{ localStorage.removeItem(k) }catch{} }
+};
+let cart = store.get('sf_cart', []);   // [{variantId, productId, name, size, color, price, qty, stock}]
+let token = store.get('sf_token', null);
+let user = store.get('sf_user', null);
+const saveCart = () => { store.set('sf_cart', cart); renderNav(); };
+
+/* ===== API calls with Fetch (async) - response format {success, message, data} ===== */
+let demoMode = false;
+async function api(path, opts = {}){
+  const headers = {'Content-Type':'application/json'};
+  if (token) headers.Authorization = 'Bearer ' + token;
+  let res, json;
+  try {
+    res = await fetch(API + path, {...opts, headers, body: opts.body ? JSON.stringify(opts.body) : undefined});
+    json = await res.json();
+  } catch (e) {
+    if (opts.noMock) throw new Error('Could not connect to the server.');
+    demoMode = true;
+    return mockApi(path, opts);
+  }
+  if (!json.success) {
+    if (res.status === 401 && token) logout(true);
+    throw new Error(json.message || 'Something went wrong.');
+  }
+  return json.data;
+}
+
+/* ===== Sample data used when the backend is not available (UI demo only) ===== */
+const MOCK_CATS = [{id:1,name:'T-shirts'},{id:2,name:'Polo shirts'},{id:3,name:'Hoodies'}];
+const mkVars = (base, id0) => ['S','M','L','XL'].flatMap((s,i) => ['Black','White','Navy'].map((c,j) =>
+  ({id:id0 + i*3 + j, size:s, color:c, price:base, stock:(i+j)%4===3 ? 0 : 3 + i + j})));
+const MOCK_PRODUCTS = [
+  {id:1,name:'Basic Cotton T-shirt',category_id:1,category_name:'T-shirts',description:'100% cotton, regular fit, soft and breathable.',variants:mkVars(199000,100)},
+  {id:2,name:'Oversize Graphic T-shirt',category_id:1,category_name:'T-shirts',description:'Relaxed fit with a front graphic print.',variants:mkVars(259000,200)},
+  {id:3,name:'Classic Pique Polo',category_id:2,category_name:'Polo shirts',description:'Stretch pique fabric with a clean collar.',variants:mkVars(329000,300)},
+  {id:4,name:'Sport Dry Polo',category_id:2,category_name:'Polo shirts',description:'Quick-dry fabric for work and workouts.',variants:mkVars(359000,400)},
+  {id:5,name:'Fleece Hoodie',category_id:3,category_name:'Hoodies',description:'Thick fleece with a double-layer hood.',variants:mkVars(499000,500)},
+  {id:6,name:'Essential Zip Hoodie',category_id:3,category_name:'Hoodies',description:'Full zip with a kangaroo pocket, warm and easy to layer.',variants:mkVars(549000,600)}
+];
+function mockApi(path, opts){
+  const m = opts.method || 'GET';
+  if (path === '/categories') return MOCK_CATS;
+  if (path.startsWith('/products/')) { const p = MOCK_PRODUCTS.find(x => x.id == path.split('/')[2]); if(!p) throw new Error('Product not found'); return p; }
+  if (path.startsWith('/products')) return MOCK_PRODUCTS;
+  if (path === '/auth/login') { token = 'demo'; return {token:'demo', user:{id:1,full_name:'Demo User',email:opts.body.email,role:'customer'}}; }
+  if (path === '/auth/register') return {token:'demo', user:{id:1,full_name:opts.body.full_name,email:opts.body.email,role:'customer'}};
+  if (path === '/orders/checkout') return {order_id:Math.floor(Math.random()*9000+1000), total:opts.body.total_preview};
+  if (path === '/orders/my-orders') return [];
+  throw new Error('No API available for ' + m + ' ' + path);
+}
+
+/* ===== UI helpers ===== */
+function toast(t){ const el = $('#toast'); el.textContent = t; el.classList.add('on'); clearTimeout(toast.t); toast.t = setTimeout(() => el.classList.remove('on'), 2200); }
+const colors = ['#2f3fd0','#0f766e','#9a3412','#6d28d9','#be123c','#334155'];
+function thumb(p){
+  const img = p.image_url ? `<img src="${esc(p.image_url)}" alt="${esc(p.name)}" loading="lazy">` : esc(p.name.trim()[0]);
+  return `<div class="thumb" style="background:${colors[p.id % colors.length]}">${img}</div>`;
+}
+const minPrice = p => p.variants?.length ? Math.min(...p.variants.map(v => +v.price)) : +(p.price ?? p.base_price ?? 0);
+const isMember = () => !!(token && user && user.role !== 'admin');
+
+function renderNav(){
+  const n = cart.reduce((s,i) => s + i.qty, 0);
+  $('#nav').innerHTML = `
+    <a href="#/">Products</a>
+    <a href="#/cart">Cart${n ? `<span class="badge">${n}</span>` : ''}</a>
+    ${user ? `<a href="#/orders">My orders</a><button id="lo">Log out (${esc(user.full_name || user.email)})</button>`
+           : `<a href="#/login">Log in</a><a href="#/register">Sign up</a>`}`;
+  const lo = $('#lo'); if (lo) lo.onclick = () => logout();
+}
+function logout(expired){
+  token = null; user = null; store.del('sf_token'); store.del('sf_user');
+  renderNav(); location.hash = '#/login'; toast(expired ? 'Your session has expired. Please log in again.' : 'You have been logged out.');
+}
+
+/* ===== Cart ===== */
+function addToCart(p, v, qty){
+  const ex = cart.find(i => i.variantId === v.id);
+  const next = (ex ? ex.qty : 0) + qty;
+  if (next > v.stock) { toast(`Only ${v.stock} left in stock.`); return; }
+  if (ex) { ex.qty = next; ex.stock = v.stock; ex.price = +v.price; }
+  else cart.push({variantId:v.id, productId:p.id, name:p.name, size:v.size, color:v.color, price:+v.price, qty, stock:v.stock});
+  saveCart(); toast('Added to cart.');
+}
+function totals(){
+  const subtotal = cart.reduce((s,i) => s + i.price * i.qty, 0);
+  const discount = isMember() ? Math.round(subtotal * MEMBER_RATE) : 0;
+  return {subtotal, discount, total: subtotal - discount};
+}
+
+/* ===== Page: product list ===== */
+async function pageHome(){
+  app.innerHTML = `<h1>Products</h1>
+    <div class="tools"><input id="q" type="search" placeholder="Search T-shirts, polos, hoodies..." aria-label="Search products">
+    <select id="cat" aria-label="Category"><option value="">All categories</option></select></div>
+    <div id="demo"></div><div class="grid" id="list">${'<div class="skel"></div>'.repeat(4)}</div>`;
+  try {
+    const [cats, prods] = await Promise.all([api('/categories'), api('/products')]);
+    $('#demo').innerHTML = demoMode ? '<div class="msg warn">Cannot reach the backend. Showing sample data.</div>' : '';
+    $('#cat').insertAdjacentHTML('beforeend', cats.map(c => `<option value="${c.id}">${esc(c.name)}</option>`).join(''));
+    const draw = () => {
+      const q = $('#q').value.trim().toLowerCase(), c = $('#cat').value;
+      const rows = prods.filter(p => (!c || p.category_id == c) && p.name.toLowerCase().includes(q));
+      $('#list').innerHTML = rows.length ? rows.map(p => `
+        <a class="card" href="#/product/${p.id}">${thumb(p)}
+        <div class="in"><h3>${esc(p.name)}</h3><div class="mute">${esc(p.category_name || '')}</div>
+        <div class="price">${money(minPrice(p))}</div></div></a>`).join('')
+        : '<p class="mute">No products found. Try a different keyword or category.</p>';
+    };
+    $('#q').oninput = draw; $('#cat').onchange = draw; draw();
+  } catch (e) { $('#list').innerHTML = `<p class="err">${esc(e.message)}</p>`; }
+}
+
+/* ===== Page: product detail (choose size/color) ===== */
+async function pageProduct(id){
+  app.innerHTML = '<div class="skel"></div>';
+  try {
+    const p = await api('/products/' + id), vs = p.variants || [];
+    let size = null, color = null, qty = 1;
+    const sizes = [...new Set(vs.map(v => v.size))], cols = [...new Set(vs.map(v => v.color))];
+    const find = () => vs.find(v => v.size === size && v.color === color);
+    const draw = () => {
+      const v = find();
+      const avail = (s, c) => vs.some(x => x.size === (s ?? x.size) && x.color === (c ?? x.color) && x.stock > 0);
+      app.innerHTML = `<p><a href="#/" class="mute">← All products</a></p>
+      <div class="detail">${thumb(p)}<div>
+        <h1>${esc(p.name)}</h1><div class="mute">${esc(p.category_name || '')}</div>
+        <p>${esc(p.description || '')}</p>
+        <div class="price" style="font-size:1.4rem">${money(v ? v.price : minPrice(p))}</div>
+        ${isMember() ? '' : `<div class="mute">Members get ${MEMBER_RATE*100}% off at checkout.</div>`}
+        <div class="f"><label>Size</label><div class="chips">${sizes.map(s => `<button class="chip" data-s="${esc(s)}" aria-pressed="${s===size}" ${avail(s,color)?'':'disabled'}>${esc(s)}</button>`).join('')}</div>
+        <label>Color</label><div class="chips">${cols.map(c => `<button class="chip" data-c="${esc(c)}" aria-pressed="${c===color}" ${avail(size,c)?'':'disabled'}>${esc(c)}</button>`).join('')}</div></div>
+        <div class="mute" id="stk">${v ? (v.stock > 0 ? `${v.stock} in stock` : 'Out of stock') : 'Select a size and color'}</div>
+        <div class="qty" style="margin:12px 0"><button id="mi" aria-label="Decrease quantity">−</button><b>${qty}</b><button id="pl" aria-label="Increase quantity">+</button></div>
+        <button class="btn block" id="add" ${v && v.stock > 0 ? '' : 'disabled'}>Add to cart</button>
+      </div></div>`;
+      app.querySelectorAll('[data-s]').forEach(b => b.onclick = () => { size = b.dataset.s; qty = 1; draw(); });
+      app.querySelectorAll('[data-c]').forEach(b => b.onclick = () => { color = b.dataset.c; qty = 1; draw(); });
+      $('#mi').onclick = () => { qty = Math.max(1, qty - 1); draw(); };
+      $('#pl').onclick = () => { if (v && qty < v.stock) qty++; draw(); };
+      $('#add').onclick = () => addToCart(p, find(), qty);
+    };
+    draw();
+  } catch (e) { app.innerHTML = `<p class="err">${esc(e.message)}</p><a class="btn ghost" href="#/">Back to products</a>`; }
+}
+
+/* ===== Page: cart ===== */
+function pageCart(){
+  if (!cart.length) { app.innerHTML = '<h1>Cart</h1><p class="mute">Your cart is empty.</p><a class="btn" href="#/">Browse products</a>'; return; }
+  const t = totals();
+  app.innerHTML = `<h1>Cart</h1><div class="two"><div class="panel">${cart.map((i, k) => `
+    <div class="row"><div class="thumb" style="background:${colors[i.productId % colors.length]}">${esc(i.name[0])}</div>
+    <div class="info"><b>${esc(i.name)}</b><div class="mute">${esc(i.size)} · ${esc(i.color)}</div><div>${money(i.price)}</div></div>
+    <div class="qty"><button data-d="${k}" data-n="-1" aria-label="Decrease quantity">−</button><span>${i.qty}</span><button data-d="${k}" data-n="1" aria-label="Increase quantity">+</button></div>
+    <button class="chip" data-rm="${k}" aria-label="Remove item">Remove</button></div>`).join('')}</div>
+    <div class="panel"><div class="sum"><span>Subtotal</span><span>${money(t.subtotal)}</span></div>
+    ${isMember() ? `<div class="sum disc"><span>Member discount (5%)</span><span>−${money(t.discount)}</span></div>`
+      : '<div class="mute">Log in to get 5% off.</div>'}
+    <div class="sum t"><span>Total</span><span>${money(t.total)}</span></div><br>
+    <a class="btn block" href="#/checkout">Checkout</a></div></div>`;
+  app.querySelectorAll('[data-d]').forEach(b => b.onclick = () => {
+    const i = cart[b.dataset.d], n = i.qty + +b.dataset.n;
+    if (n < 1) return;
+    if (n > i.stock) return toast(`Only ${i.stock} left in stock.`);
+    i.qty = n; saveCart(); pageCart();
+  });
+  app.querySelectorAll('[data-rm]').forEach(b => b.onclick = () => { cart.splice(b.dataset.rm, 1); saveCart(); pageCart(); });
+}
+
+/* ===== Page: checkout (guest or member) ===== */
+function pageCheckout(){
+  if (!cart.length) { location.hash = '#/cart'; return; }
+  const t = totals(), u = user || {};
+  app.innerHTML = `<h1>Checkout</h1><div class="two"><form class="panel f" id="fm" novalidate>
+    ${isMember() ? '' : '<div class="msg">You can check out as a guest. <a href="#/login"><u>Log in</u></a> to get 5% off.</div>'}
+    <label for="nm">Full name</label><input id="nm" required autocomplete="name" value="${esc(u.full_name || '')}">
+    <label for="ph">Phone number</label><input id="ph" required inputmode="tel" autocomplete="tel" value="${esc(u.phone || '')}">
+    <label for="ad">Shipping address</label><textarea id="ad" rows="3" required autocomplete="street-address">${esc(u.address || '')}</textarea>
+    <div class="err" id="er" role="alert"></div><br>
+    <button class="btn block" id="go">Place order</button></form>
+    <div class="panel"><b>Your order</b>${cart.map(i => `<div class="sum mute"><span>${esc(i.name)} (${esc(i.size)}/${esc(i.color)}) ×${i.qty}</span><span>${money(i.price*i.qty)}</span></div>`).join('')}
+    <div class="sum"><span>Subtotal</span><span>${money(t.subtotal)}</span></div>
+    ${t.discount ? `<div class="sum disc"><span>Member discount</span><span>−${money(t.discount)}</span></div>` : ''}
+    <div class="sum t"><span>Total</span><span>${money(t.total)}</span></div></div></div>`;
+  $('#fm').onsubmit = async ev => {
+    ev.preventDefault();
+    const name = $('#nm').value.trim(), phone = $('#ph').value.trim(), address = $('#ad').value.trim();
+    if (!name || !address) return $('#er').textContent = 'Enter your full name and shipping address.';
+    if (!/^(0|\+84)\d{9,10}$/.test(phone.replace(/\s/g, ''))) return $('#er').textContent = 'Enter a valid phone number (e.g. 0901234567).';
+    $('#er').textContent = ''; $('#go').disabled = true; $('#go').textContent = 'Placing order...';
+    try {
+      // The server verifies variants, prices and stock, and applies the discount. The client only sends variant_id + quantity.
+      const data = await api('/orders/checkout', {method:'POST', body:{
+        customer_name:name, customer_phone:phone, shipping_address:address,
+        items: cart.map(i => ({variant_id:i.variantId, quantity:i.qty})), total_preview:t.total }});
+      cart = []; saveCart();
+      app.innerHTML = `<div class="msg ok"><b>Order placed!</b><br>Order number: #${esc(data.order_id ?? data.id ?? '')}</div><a class="btn" href="#/">Continue shopping</a>`;
+    } catch (e) { $('#er').textContent = e.message; $('#go').disabled = false; $('#go').textContent = 'Place order'; }
+  };
+}
+
+/* ===== Page: log in / sign up ===== */
+function pageAuth(reg){
+  app.innerHTML = `<h1>${reg ? 'Sign up' : 'Log in'}</h1><form class="panel f" id="fm" style="max-width:420px" novalidate>
+    ${reg ? '<label for="fn">Full name</label><input id="fn" required autocomplete="name">' : ''}
+    <label for="em">Email</label><input id="em" type="email" required autocomplete="email">
+    <label for="pw">Password</label><input id="pw" type="password" required minlength="6" autocomplete="${reg ? 'new-password' : 'current-password'}">
+    <div class="err" id="er" role="alert"></div><br>
+    <button class="btn block">${reg ? 'Create account' : 'Log in'}</button>
+    <p class="mute">${reg ? 'Already have an account? <a href="#/login"><u>Log in</u></a>' : 'New here? <a href="#/register"><u>Sign up</u></a> to get 5% off.'}</p></form>`;
+  $('#fm').onsubmit = async ev => {
+    ev.preventDefault();
+    const email = $('#em').value.trim(), password = $('#pw').value, full_name = reg ? $('#fn').value.trim() : undefined;
+    if (!email || password.length < 6 || (reg && !full_name)) return $('#er').textContent = 'Fill in all fields. Password must be at least 6 characters.';
+    try {
+      if (reg) await api('/auth/register', {method:'POST', body:{full_name, email, password}});
+      const d = await api('/auth/login', {method:'POST', body:{email, password}});
+      token = d.token; user = d.user || {email};
+      store.set('sf_token', token); store.set('sf_user', user); renderNav();
+      toast('Welcome, ' + (user.full_name || user.email));
+      location.hash = '#/';
+    } catch (e) { $('#er').textContent = e.message; }
+  };
+}
+
+/* ===== Page: my orders ===== */
+async function pageOrders(){
+  if (!token) { location.hash = '#/login'; return; }
+  app.innerHTML = '<h1>My orders</h1><div class="skel"></div>';
+  try {
+    const rows = await api('/orders/my-orders');
+    app.innerHTML = '<h1>My orders</h1>' + (rows.length ? `<div class="panel">${rows.map(o => `
+      <div class="row"><div class="info"><b>Order #${esc(o.id)}</b><div class="mute">${o.created_at ? new Date(o.created_at).toLocaleDateString('en-US') : ''}</div></div>
+      <span class="st">${esc(o.status)}</span><b>${money(o.total_amount ?? o.total ?? 0)}</b></div>`).join('')}</div>`
+      : '<p class="mute">You have no orders yet.</p>');
+  } catch (e) { app.innerHTML = `<h1>My orders</h1><p class="err">${esc(e.message)}</p>`; }
+}
+
+/* ===== Router (hash) ===== */
+function route(){
+  const [, page, arg] = (location.hash || '#/').split('/');
+  window.scrollTo(0, 0);
+  if (page === 'product') pageProduct(arg);
+  else if (page === 'cart') pageCart();
+  else if (page === 'checkout') pageCheckout();
+  else if (page === 'login') pageAuth(false);
+  else if (page === 'register') pageAuth(true);
+  else if (page === 'orders') pageOrders();
+  else pageHome();
+}
+addEventListener('hashchange', route);
+renderNav(); route();
+// Refresh user info if a token exists
+if (token) api('/auth/me', {noMock:true}).then(u => { user = u.user || u; store.set('sf_user', user); renderNav(); }).catch(() => {});
+</script>
+</body>
+</html>
